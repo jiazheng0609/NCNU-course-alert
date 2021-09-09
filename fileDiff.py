@@ -51,6 +51,12 @@ def curlDepartmentCourseTable(year):
 
     # 取得 所有課程的 csv
     response = session.get('https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?export=csv')
+
+    # 遇到太短的請求可能是因為 cookie 失效，要重新取 session，正常的有 636746 bytes
+    if len(response.content) < 500000:
+        gotSession = 0
+        return "error"
+
     curlTime = time.strftime("%Y%m%d_%H%M%S")
     print("取得所有課程資料：", curlTime)
     
@@ -62,8 +68,8 @@ if __name__ == "__main__":
     prevAns = curlDepartmentCourseTable("1101")
     while True:
         newAns = curlDepartmentCourseTable("1101")
-
-        if newAns != prevAns:
+        
+        if gotSession and (newAns != prevAns):
             for courseID in newAns:
                 curCourse = newAns[courseID]
                 if prevAns[courseID]['chosen'] != curCourse['chosen']:
