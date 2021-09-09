@@ -1,0 +1,133 @@
+import os
+from bs4 import BeautifulSoup as bs
+import requests
+import time
+import subprocess
+import csv
+
+session = requests.Session()
+gotSession = 0
+mainURL = "https://ccweb.ncnu.edu.tw/student/"
+courses = []
+generalCourse = []
+
+def parseCsv(filename):
+    with open(filename) as fp:
+        csvData = fp.read()
+
+    ans = {}
+    courses = csvData.split('"\n')[1:-1]
+    for course in courses:
+        course = course.replace('\n', '.')
+        #print(course)
+        data = course[1:].split('","')
+        
+        courseObj = {}
+
+        courseObj['year']        = data[0]
+        courseObj['number']      = data[1]
+        courseObj['class']       = data[2]
+        courseObj['name']        = data[3]
+        courseObj['department']  = data[4]
+        courseObj['graduated']   = data[6]
+        courseObj['grade']       = data[7]
+        courseObj['teacher']     = data[8]
+        courseObj['place']       = data[9]
+        courseObj['time']        = data[13]
+        courseObj['credit']      = data[14]
+        courseObj['limit']       = data[15]
+        courseObj['chosen']      = data[16]
+        ans[data[1]+data[2]]= courseObj
+    return ans
+
+def login(username, password):
+    global session
+    response = session.get('https://ccweb.ncnu.edu.tw/student/login.php')
+    root = bs(response.text, 'html.parser')
+    loginToken = root.find('input', {'name': 'token'}).get('value')
+
+    # request login page
+    response = session.post(
+        "https://ccweb.ncnu.edu.tw/student/login.php",
+        data={
+            'token': loginToken,
+            'modal': '0',
+            'username': username,
+            'password': password,
+            'type': 'a'
+        }
+    )
+
+    # 成功的話 return http 302, redirect
+    if len(response.history)!=0:
+        return True
+    else:
+        return False
+        
+def curlDepartmentCourseTable(year):
+    '''
+        先取得各科系的開課表格連結
+        再將連結丟給 extractDepartmentCourseTable() 取得課程資訊
+    '''
+
+    global gotSession
+    if gotSession == 0:
+        # 切換年度，應該是用 cookie 儲存當前閱覽的年份
+        url = 'https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?cmd=search&t=aspmaker_course_opened_detail_view&z_year=%3D&x_year={}&z_courseid=%3D&x_courseid=&z_cname=LIKE&x_cname=&z_deptid=%3D&x_deptid=&z_division=LIKE&x_division=&z_grade=%3D&x_grade=&z_teachers=LIKE&x_teachers=&z_not_accessible=LIKE&x_not_accessible='
+        response = session.get(url.format(year))
+        gotSession = 1
+
+    # 取得 所有課程的 csv
+    response = session.get('https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?export=csv')
+    filename = "allCourses"+time.strftime("%Y%m%dT%H%M%S")+".csv"
+    print("取得所有課程資料：", filename)
+    with open(filename, "wb+") as fp:
+        fp.write(response.content)
+
+    return filename
+
+
+
+if __name__ == "__main__":
+    # year = input("年份: ")
+
+    while True:
+        username = input("學號： ")
+        password = input("密碼： ")
+        if login(username, password):
+            break
+        else:
+            print("登入失敗！")
+            
+    prevFilename = curlDepartmentCourseTable("1101")
+    prevAns = parseCsv(prevFilename)
+
+
+    while True:
+        newFilename = curlDepartmentCourseTable("1101")
+
+        # 比對新抓到資料和前一筆資料，整個檔案有無 diff
+        retcode = 0
+        try:
+            out_bytes = subprocess.check_output(["diff", prevFilename, newFilename])
+        except subprocess.CalledProcessError as e:
+            out_bytes = e.output
+            retcode = e.returncode
+        
+        if retcode == 0:
+            os.remove(newFilename) 
+
+        # 若檔案有變動，才開始逐堂課比對
+        if retcode != 0:
+            newAns = parseCsv(newFilename)
+            for courseID in newAns:
+                curCourse = newAns[courseID]
+                if prevAns[courseID]['chosen'] != curCourse['chosen']:
+                    print("diff!", curCourse['number'], curCourse['class'], curCourse['name'], curCourse['chosen'], int(curCourse['chosen'])-int(prevAns[courseID]['chosen']))
+                    prevAns[courseID]['chosen'] = curCourse['chosen']
+
+        time.sleep(0.5)
+
+
+
+
