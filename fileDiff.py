@@ -9,17 +9,13 @@ session = requests.Session()
 gotSession = 0
 mainURL = "https://ccweb.ncnu.edu.tw/student/"
 courses = []
-generalCourse = []
 
-def parseCsv(filename):
-    with open(filename) as fp:
-        csvData = fp.read()
-
+def parseCsv(csvData):
     ans = {}
-    courses = csvData.split('"\n')[1:-1]
+    courses = csvData.split('"\r\n')[1:-1]
+
     for course in courses:
         course = course.replace('\n', '.')
-        #print(course)
         data = course[1:].split('","')
         
         courseObj = {}
@@ -55,38 +51,19 @@ def curlDepartmentCourseTable(year):
 
     # 取得 所有課程的 csv
     response = session.get('https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?export=csv')
-    filename = "allCourses"+time.strftime("%Y%m%dT%H%M%S")+".csv"
-    print("取得所有課程資料：", filename)
-    with open(filename, "wb+") as fp:
-        fp.write(response.content)
-
-    return filename
-
+    curlTime = time.strftime("%Y%m%d_%H%M%S")
+    print("取得所有課程資料：", curlTime)
+    
+    return parseCsv(response.content.decode('utf-8'))
 
 
 if __name__ == "__main__":
 
-    prevFilename = curlDepartmentCourseTable("1101")
-    prevAns = parseCsv(prevFilename)
-
-
+    prevAns = curlDepartmentCourseTable("1101")
     while True:
-        newFilename = curlDepartmentCourseTable("1101")
+        newAns = curlDepartmentCourseTable("1101")
 
-        # 比對新抓到資料和前一筆資料，整個檔案有無 diff
-        retcode = 0
-        try:
-            out_bytes = subprocess.check_output(["diff", prevFilename, newFilename])
-        except subprocess.CalledProcessError as e:
-            out_bytes = e.output
-            retcode = e.returncode
-        
-        if retcode == 0:
-            os.remove(newFilename) 
-
-        # 若檔案有變動，才開始逐堂課比對
-        if retcode != 0:
-            newAns = parseCsv(newFilename)
+        if newAns != prevAns:
             for courseID in newAns:
                 curCourse = newAns[courseID]
                 if prevAns[courseID]['chosen'] != curCourse['chosen']:
