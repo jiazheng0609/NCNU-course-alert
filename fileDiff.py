@@ -4,6 +4,8 @@ import requests
 import time
 import subprocess
 import csv
+from bot import CourseAlertBot
+import json
 
 session = requests.Session()
 gotSession = 0
@@ -65,6 +67,9 @@ def curlDepartmentCourseTable(year):
 
 if __name__ == "__main__":
 
+    bot = CourseAlertBot()
+    bot.start_polling()
+
     prevAns = curlDepartmentCourseTable("1101")
     while True:
         newAns = curlDepartmentCourseTable("1101")
@@ -73,8 +78,22 @@ if __name__ == "__main__":
             for courseID in newAns:
                 curCourse = newAns[courseID]
                 if prevAns[courseID]['chosen'] != curCourse['chosen']:
-                    print("diff!", curCourse['number'], curCourse['class'], curCourse['name'], curCourse['chosen'], int(curCourse['chosen'])-int(prevAns[courseID]['chosen']))
+                    gap = int(curCourse['chosen'])-int(prevAns[courseID]['chosen'])
+                    print("diff!", curCourse['number'], curCourse['class'], curCourse['name'], curCourse['chosen'], gap)
                     prevAns[courseID]['chosen'] = curCourse['chosen']
+
+                    # bot 發送訊息
+                    with open('target.json') as fp:
+                        target = json.load(fp)
+
+                    courseNumber = curCourse['number']
+                    if str(courseNumber) in target and gap<0:
+                        for chatID in target[courseNumber]:
+                            print("send to {}".format(chatID))
+                            bot.send(
+                                chatID,
+                                "{}{} {}班 釋出{}個名額".format(curCourse['number'], curCourse['name'], curCourse['class'], -gap)
+                            )
 
         time.sleep(0.5)
 
