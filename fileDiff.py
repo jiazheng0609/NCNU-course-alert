@@ -39,30 +39,6 @@ def parseCsv(filename):
         courseObj['chosen']      = data[16]
         ans[data[1]+data[2]]= courseObj
     return ans
-
-def login(username, password):
-    global session
-    response = session.get('https://ccweb.ncnu.edu.tw/student/login.php')
-    root = bs(response.text, 'html.parser')
-    loginToken = root.find('input', {'name': 'token'}).get('value')
-
-    # request login page
-    response = session.post(
-        "https://ccweb.ncnu.edu.tw/student/login.php",
-        data={
-            'token': loginToken,
-            'modal': '0',
-            'username': username,
-            'password': password,
-            'type': 'a'
-        }
-    )
-
-    # 成功的話 return http 302, redirect
-    if len(response.history)!=0:
-        return True
-    else:
-        return False
         
 def curlDepartmentCourseTable(year):
     '''
@@ -89,16 +65,7 @@ def curlDepartmentCourseTable(year):
 
 
 if __name__ == "__main__":
-    # year = input("年份: ")
 
-    while True:
-        username = input("學號： ")
-        password = input("密碼： ")
-        if login(username, password):
-            break
-        else:
-            print("登入失敗！")
-            
     prevFilename = curlDepartmentCourseTable("1101")
     prevAns = parseCsv(prevFilename)
 
