@@ -67,6 +67,9 @@ if __name__ == "__main__":
     while True:
         newAns = curlDepartmentCourseTable("1101")
         
+        with open('target.json') as fp:
+            target = json.load(fp)
+
         if  (newAns != prevAns):
             for courseID in newAns:
                 curCourse = newAns[courseID]
@@ -76,9 +79,6 @@ if __name__ == "__main__":
                     prevAns[courseID]['chosen'] = curCourse['chosen']
 
                     # bot 發送訊息
-                    with open('target.json') as fp:
-                        target = json.load(fp)
-
                     courseNumber = curCourse['number']
                     if str(courseNumber) in target and gap<0:
                         for chatID in target[courseNumber]:
