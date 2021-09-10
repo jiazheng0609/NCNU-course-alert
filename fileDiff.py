@@ -71,6 +71,12 @@ if __name__ == "__main__":
     bot.start_polling()
 
     prevAns = curlDepartmentCourseTable("1101")
+
+    # 若檔案不存在要存一份 course.csv，要給 bot 查詢 courseID
+    if not os.path.isfile('course.json'):
+        with open('course.json', 'w') as fp:
+            json.dump(prevAns, fp)
+    
     while True:
         newAns = curlDepartmentCourseTable("1101")
         
