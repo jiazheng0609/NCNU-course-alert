@@ -8,7 +8,6 @@ from bot import CourseAlertBot
 import json
 
 session = requests.Session()
-gotSession = 0
 mainURL = "https://ccweb.ncnu.edu.tw/student/"
 courses = []
 
@@ -44,20 +43,8 @@ def curlDepartmentCourseTable(year):
         再將連結丟給 extractDepartmentCourseTable() 取得課程資訊
     '''
 
-    global gotSession
-    if gotSession == 0:
-        # 切換年度，應該是用 cookie 儲存當前閱覽的年份
-        url = 'https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?cmd=search&t=aspmaker_course_opened_detail_view&z_year=%3D&x_year={}&z_courseid=%3D&x_courseid=&z_cname=LIKE&x_cname=&z_deptid=%3D&x_deptid=&z_division=LIKE&x_division=&z_grade=%3D&x_grade=&z_teachers=LIKE&x_teachers=&z_not_accessible=LIKE&x_not_accessible='
-        response = session.get(url.format(year))
-        gotSession = 1
-
     # 取得 所有課程的 csv
-    response = session.get('https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?export=csv')
-
-    # 遇到太短的回應可能是因為 cookie 失效，要重新取 session，正常的有 636746 bytes
-    if len(response.content) < 500000:
-        gotSession = 0
-        return "error"
+    response = session.get('https://ccweb.ncnu.edu.tw/student/current_semester_opened_listlist.php?export=csv')
 
     curlTime = time.strftime("%Y%m%d_%H%M%S")
     print("取得所有課程資料：", curlTime)
@@ -80,7 +67,7 @@ if __name__ == "__main__":
     while True:
         newAns = curlDepartmentCourseTable("1101")
         
-        if gotSession and (newAns != prevAns):
+        if  (newAns != prevAns):
             for courseID in newAns:
                 curCourse = newAns[courseID]
                 if prevAns[courseID]['chosen'] != curCourse['chosen']:
