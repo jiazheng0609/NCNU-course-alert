@@ -19,6 +19,7 @@ class CourseAlertBot():
         self.dispacher.add_handler(CommandHandler('add',     self.add))
         self.dispacher.add_handler(CommandHandler('remove',  self.remove))
         self.dispacher.add_handler(CommandHandler('list',    self.ls))
+        self.dispacher.add_handler(CommandHandler('find',    self.find))
     
     def start_polling(self):
         self.updater.start_polling()
@@ -40,6 +41,8 @@ class CourseAlertBot():
                 "\n         - 增加「追蹤課號」" +
                 "\n\n   /remove [課號]" +
                 "\n         - 移除「已追蹤課號」" +
+                "\n\n   /find [課程關鍵字]" +
+                "\n         - 使用關鍵字查詢「課號」" +
                 "\n\n   /list" +
                 "\n         - 查看「已追蹤課號」列表"
                 "\n\n   /help" +
@@ -123,3 +126,37 @@ class CourseAlertBot():
                 ans.append(courseID)
         
         context.bot.send_message(chat_id=user.id, text="你的清單：{}".format(ans))
+
+    def find(self, update, context):
+        '''
+            利用關鍵字查詢課號
+
+        '''
+        user = update.effective_chat
+
+        # 參數量錯誤
+        if len(context.args) != 1:
+            context.bot.send_message(chat_id=user.id, text="使用方式: /find [課程關鍵字]")
+            return
+        
+        with open('course.json') as fp:
+            courseData = json.load(fp)
+        
+        ans = set()
+        for courseID in courseData:
+            courseName = courseData[courseID]['name']
+            courseNumber = courseData[courseID]['number']
+            department = courseData[courseID]['department']
+
+            if context.args[0] in courseName:
+                ans.add("{} {} - {}\n".format(courseNumber, courseName, department))
+        
+        # 字串處理
+        output = ""
+        for course in ans:
+            output += "{}\n\n".format(course)
+        
+        if output == "":
+            context.bot.send_message(chat_id=user.id, text="查無相關課程")
+        else:
+            context.bot.send_message(chat_id=user.id, text="查詢結果:\n\n{}".format(output))
