@@ -58,7 +58,7 @@ class CourseAlertBot():
 
         def checkRemain(courseID):
             '''
-                確認是否當下就可以進行選課，若可以則 return false 代表不需要追蹤
+                確認是否當下就可以進行選課
             '''
             # 確認所有該課號的班別是否有名額
             remainNumber = 0
@@ -71,9 +71,6 @@ class CourseAlertBot():
                     text="你要增加的課程存在沒有名額限制的班別，如果需要取消追蹤請使用 /remove {}".format(courseID) if remainNumber >= 999
                     else "你要增加的課程現在有{}個名額，如果需要取消追蹤請使用 /remove {}".format(remainNumber, courseID)
                 )
-                return False
-            else:
-                return True
         
         user = update.effective_chat
 
