@@ -76,6 +76,9 @@ def curlDepartmentCourseTable(year, format):
 
     curlTime = time.strftime("%Y%m%d_%H%M%S")
     print("取得所有課程資料：", curlTime)
+
+    if response.status_code != 200:
+        raise ConnectionError("{} error".format(response.status_code))
     
     if format == 'csv':
         return parseCsv(response.content.decode('utf-8'))
@@ -96,7 +99,10 @@ if __name__ == "__main__":
             json.dump(prevAns, fp)
     
     while True:
-        newAns = curlDepartmentCourseTable("1101", 'html')
+        try:
+            newAns = curlDepartmentCourseTable("1101", 'html')
+        except:
+            continue
         
         with open('target.json') as fp:
             target = json.load(fp)
