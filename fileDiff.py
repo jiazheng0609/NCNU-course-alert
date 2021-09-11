@@ -63,7 +63,7 @@ def parseHtml(htmlData):
             courseObj['limit']       = tds[15].get_text()
             courseObj['chosen']      = tds[16].get_text()
 
-            # 若有名額限制，則 remain 存剩餘名額，若沒有限制直接回傳 1
+            # 若有名額限制，則 remain 存剩餘名額，若沒有限制直接回傳 9999
             courseObj['remain']      = int(courseObj['limit']) - int(courseObj['chosen']) if courseObj['limit'] != "" else 9999
             ans[courseObj['number']+courseObj['class']]= courseObj
     return ans

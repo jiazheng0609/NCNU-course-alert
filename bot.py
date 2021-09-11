@@ -68,7 +68,7 @@ class CourseAlertBot():
             
             if remainNumber>0:
                 context.bot.send_message(chat_id=user.id,
-                    text="你要增加的課程存在沒有名額限制的班別，如果需要取消追蹤請使用 /remove {}".format(courseID) if remainNumber >= 999
+                    text="你要增加的課程存在沒有名額限制的班別，如果需要取消追蹤請使用 /remove {}".format(courseID) if remainNumber >= 9999
                     else "你要增加的課程現在有{}個名額，如果需要取消追蹤請使用 /remove {}".format(remainNumber, courseID)
                 )
         
