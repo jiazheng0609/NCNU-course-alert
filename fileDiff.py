@@ -119,7 +119,7 @@ if __name__ == "__main__":
                                 "{}{} {}班 釋出{}個名額".format(curCourse['number'], curCourse['name'], curCourse['class'], -gap)
                             )
 
-        time.sleep(0.5)
+        time.sleep(25)
 
 
 
