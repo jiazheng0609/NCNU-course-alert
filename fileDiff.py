@@ -62,6 +62,9 @@ def parseHtml(htmlData):
             courseObj['credit']      = tds[14].get_text()
             courseObj['limit']       = tds[15].get_text()
             courseObj['chosen']      = tds[16].get_text()
+
+            # 若有名額限制，則 remain 存剩餘名額，若沒有限制直接回傳 1
+            courseObj['remain']      = int(courseObj['limit']) - int(courseObj['chosen']) if courseObj['limit'] != "" else 9999
             ans[courseObj['number']+courseObj['class']]= courseObj
     return ans
         
@@ -88,12 +91,12 @@ if __name__ == "__main__":
     bot = CourseAlertBot()
     bot.start_polling()
 
-    prevAns = curlDepartmentCourseTable("1101", 'html')
+    bot.prevAns = curlDepartmentCourseTable("1101", 'html')
 
     # 若檔案不存在要存一份 course.csv，要給 bot 查詢 courseID
     if not os.path.isfile('course.json'):
         with open('course.json', 'w') as fp:
-            json.dump(prevAns, fp)
+            json.dump(bot.prevAns, fp)
     
     while True:
         newAns = curlDepartmentCourseTable("1101", 'html')
@@ -101,15 +104,18 @@ if __name__ == "__main__":
         with open('target.json') as fp:
             target = json.load(fp)
 
-        if  (newAns != prevAns):
+        if  (newAns != bot.prevAns):
             for courseID in newAns:
                 curCourse = newAns[courseID]
-                if prevAns[courseID]['chosen'] != curCourse['chosen']:
-                    gap = int(curCourse['chosen'])-int(prevAns[courseID]['chosen'])
-                    print("diff!", curCourse['number'], curCourse['class'], curCourse['name'], curCourse['chosen'], gap)
-                    prevAns[courseID]['chosen'] = curCourse['chosen']
 
-                    # bot 發送訊息
+                # 發現人數有變化
+                if bot.prevAns[courseID]['chosen'] != curCourse['chosen']:
+                    gap = int(curCourse['chosen'])-int(bot.prevAns[courseID]['chosen'])
+                    print("diff!", curCourse['number'], curCourse['class'], curCourse['name'], curCourse['chosen'], gap)
+                    bot.prevAns[courseID]['chosen'] = curCourse['chosen']
+                    bot.prevAns[courseID]['remain'] = curCourse['remain']   # 因為人數有變化，因此 remain 必須變更
+
+                    # bot 發送訊息，當人數是增加的時候才運行
                     courseNumber = curCourse['number']
                     if str(courseNumber) in target and gap<0:
                         for chatID in target[courseNumber]:
