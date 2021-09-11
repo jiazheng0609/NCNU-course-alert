@@ -20,6 +20,8 @@ class CourseAlertBot():
         self.dispacher.add_handler(CommandHandler('remove',  self.remove))
         self.dispacher.add_handler(CommandHandler('list',    self.ls))
         self.dispacher.add_handler(CommandHandler('find',    self.find))
+
+        self.prevAns = None # 紀錄當前的課程狀況，為了給 add 確認剩餘人數
     
     def start_polling(self):
         self.updater.start_polling()
@@ -53,6 +55,23 @@ class CourseAlertBot():
         '''
             增加使用者的「追蹤」, for '/add'
         '''
+
+        def checkRemain(courseID):
+            '''
+                確認是否當下就可以進行選課
+            '''
+            # 確認所有該課號的班別是否有名額
+            remainNumber = 0
+            for course in self.prevAns:
+                if courseID in course:
+                    remainNumber += int(self.prevAns[course]['remain'])
+            
+            if remainNumber>0:
+                context.bot.send_message(chat_id=user.id,
+                    text="你要增加的課程存在沒有名額限制的班別，如果需要取消追蹤請使用 /remove {}".format(courseID) if remainNumber >= 9999
+                    else "你要增加的課程現在有{}個名額，如果需要取消追蹤請使用 /remove {}".format(remainNumber, courseID)
+                )
+        
         user = update.effective_chat
 
         # 參數量錯誤
@@ -73,9 +92,11 @@ class CourseAlertBot():
             else:
                 target[courseID].append(user.id)
                 context.bot.send_message(chat_id=user.id, text="已經新增{}".format(courseID))
+                checkRemain(courseID)   # 若還有班別可以選擇，就提醒 user
         else:
             target[context.args[0]] = [user.id]
             context.bot.send_message(chat_id=user.id, text="已經新增{}".format(courseID))
+            checkRemain(courseID)       # 若還有班別可以選擇，就提醒 user
         
         with open('target.json', 'w') as fp:
             json.dump(target, fp)
