@@ -4,6 +4,8 @@ import requests
 import time
 import subprocess
 import csv
+
+from requests.models import Response
 from bot import CourseAlertBot
 import json
 
@@ -36,20 +38,49 @@ def parseCsv(csvData):
         courseObj['chosen']      = data[16]
         ans[data[1]+data[2]]= courseObj
     return ans
+
+def parseHtml(htmlData):
+    ans = {}
+    bsObj = bs(htmlData, "lxml")
+    trs = bsObj.table.findAll("tr")
+
+    for oneTr in trs[1:]:
+        tds = oneTr.findAll("td")
+        if len(tds) > 1:
+            courseObj = {}
+
+            courseObj['year']        = tds[0].get_text()
+            courseObj['number']      = tds[1].get_text()
+            courseObj['class']       = tds[2].get_text()
+            courseObj['name']        = tds[3].get_text()
+            courseObj['department']  = tds[4].get_text()
+            courseObj['graduated']   = tds[6].get_text()
+            courseObj['grade']       = tds[7].get_text()
+            courseObj['teacher']     = tds[8].get_text()
+            courseObj['place']       = tds[9].get_text()
+            courseObj['time']        = tds[13].get_text()
+            courseObj['credit']      = tds[14].get_text()
+            courseObj['limit']       = tds[15].get_text()
+            courseObj['chosen']      = tds[16].get_text()
+            ans[courseObj['number']+courseObj['class']]= courseObj
+    return ans
         
-def curlDepartmentCourseTable(year):
+def curlDepartmentCourseTable(year, format):
     '''
-        先取得各科系的開課表格連結
-        再將連結丟給 extractDepartmentCourseTable() 取得課程資訊
+        year: 學年度，4 位數字，例如: 1101
+        format: 格式選項，例如: 'csv', 'html'
     '''
 
-    # 取得 所有課程的 csv
-    response = session.get('https://ccweb.ncnu.edu.tw/student/current_semester_opened_listlist.php?export=csv')
+    # 取得所有課程的 csv 或 html
+    response = session.get('https://ccweb.ncnu.edu.tw/student/current_semester_opened_listlist.php?export='+format)
 
     curlTime = time.strftime("%Y%m%d_%H%M%S")
     print("取得所有課程資料：", curlTime)
     
-    return parseCsv(response.content.decode('utf-8'))
+    if format == 'csv':
+        return parseCsv(response.content.decode('utf-8'))
+    elif format == 'html':
+        return parseHtml(response.text)
 
 
 if __name__ == "__main__":
@@ -57,7 +88,7 @@ if __name__ == "__main__":
     bot = CourseAlertBot()
     bot.start_polling()
 
-    prevAns = curlDepartmentCourseTable("1101")
+    prevAns = curlDepartmentCourseTable("1101", 'html')
 
     # 若檔案不存在要存一份 course.csv，要給 bot 查詢 courseID
     if not os.path.isfile('course.json'):
@@ -65,7 +96,7 @@ if __name__ == "__main__":
             json.dump(prevAns, fp)
     
     while True:
-        newAns = curlDepartmentCourseTable("1101")
+        newAns = curlDepartmentCourseTable("1101", 'html')
         
         with open('target.json') as fp:
             target = json.load(fp)
