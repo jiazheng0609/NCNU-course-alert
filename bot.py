@@ -144,9 +144,19 @@ class CourseAlertBot():
         ans = []
         for courseID in target:
             if user.id in target[courseID]:
-                ans.append(courseID)
+                courseName = ""
+                for courseNumberAndClass in self.prevAns:
+                    if courseID in courseNumberAndClass:
+                        courseName = self.prevAns[courseNumberAndClass]['name']
+                        break
+                ans.append("{} {}".format(courseID, courseName))
         
-        context.bot.send_message(chat_id=user.id, text="你的清單：{}".format(ans))
+        #  字串處理
+        ansStr = ""
+        for courseName in ans:
+            ansStr += "{}\n".format(courseName)
+        
+        context.bot.send_message(chat_id=user.id, text="你的清單：\n{}".format(ansStr))
 
     def find(self, update, context):
         '''
