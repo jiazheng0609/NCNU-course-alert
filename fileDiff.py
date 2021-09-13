@@ -114,13 +114,20 @@ if __name__ == "__main__":
             for courseID in newAns:
                 curCourse = newAns[courseID]
 
+                # 有時候會抓到以前沒有的課號，造成 KeyError，要更新舊資料中的課程列表
+                if courseID not in bot.prevAns:
+                    print("課程列表有變動！")
+                    bot.prevAns = curlDepartmentCourseTable("1101", 'html')
+                    with open('course.json', 'w') as fp:
+                        json.dump(bot.prevAns, fp)
+
                 # 發現人數有變化
                 if bot.prevAns[courseID]['chosen'] != curCourse['chosen']:
                     gap = int(curCourse['chosen'])-int(bot.prevAns[courseID]['chosen'])
                     print("diff!", curCourse['number'], curCourse['class'], curCourse['name'], curCourse['chosen'], gap)
                     bot.prevAns[courseID]['chosen'] = curCourse['chosen']
                     bot.prevAns[courseID]['remain'] = curCourse['remain']   # 因為人數有變化，因此 remain 必須變更
-
+                    
                     # bot 發送訊息，當人數是增加的時候才運行
                     courseNumber = curCourse['number']
                     if str(courseNumber) in target and gap<0:
