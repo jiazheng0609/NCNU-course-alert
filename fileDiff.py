@@ -114,10 +114,10 @@ if __name__ == "__main__":
             for courseID in newAns:
                 curCourse = newAns[courseID]
 
-                # 有時候會抓到以前沒有的課號，造成 KeyError，要更新舊資料中的課程列表
+                # 有時候會抓到以前沒有的課號，造成 KeyError，要在舊資料的課程列表當中插入新增的課
                 if courseID not in bot.prevAns:
                     print("課程列表有變動！")
-                    bot.prevAns = curlDepartmentCourseTable("1101", 'html')
+                    bot.prevAns[courseID] = curCourse
                     with open('course.json', 'w') as fp:
                         json.dump(bot.prevAns, fp)
 
