@@ -95,11 +95,6 @@ if __name__ == "__main__":
     bot.start_polling()
 
     bot.prevAns = curlDepartmentCourseTable("1101", 'html')
-
-    # 若檔案不存在要存一份 course.csv，要給 bot 查詢 courseID
-    if not os.path.isfile('course.json'):
-        with open('course.json', 'w') as fp:
-            json.dump(bot.prevAns, fp)
     
     while True:
         try:
@@ -118,8 +113,6 @@ if __name__ == "__main__":
                 if courseID not in bot.prevAns:
                     print("課程列表有變動！")
                     bot.prevAns[courseID] = curCourse
-                    with open('course.json', 'w') as fp:
-                        json.dump(bot.prevAns, fp)
 
                 # 發現人數有變化
                 if bot.prevAns[courseID]['chosen'] != curCourse['chosen']:

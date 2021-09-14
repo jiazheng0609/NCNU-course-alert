@@ -169,11 +169,9 @@ class CourseAlertBot():
         if len(context.args) != 1:
             context.bot.send_message(chat_id=user.id, text="使用方式: /find [課程關鍵字]")
             return
-        
-        with open('course.json') as fp:
-            courseData = json.load(fp)
-        
+                
         ans = set()
+        courseData = self.prevAns
         for courseID in courseData:
             courseName = courseData[courseID]['name']
             courseNumber = courseData[courseID]['number']
