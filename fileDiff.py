@@ -91,11 +91,11 @@ def curlDepartmentCourseTable(year, format):
 
 if __name__ == "__main__":
 
+    bot.prevAns = curlDepartmentCourseTable("1101", 'html')
+
     bot = CourseAlertBot()
     bot.start_polling()
 
-    bot.prevAns = curlDepartmentCourseTable("1101", 'html')
-    
     while True:
         try:
             newAns = curlDepartmentCourseTable("1101", 'html')
