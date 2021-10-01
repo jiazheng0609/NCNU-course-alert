@@ -75,7 +75,7 @@ def curlDepartmentCourseTable(year, format):
     '''
 
     # 取得所有課程的 csv 或 html
-    response = session.get('https://ccweb.ncnu.edu.tw/student/current_semester_opened_listlist.php?export='+format)
+    response = session.get('https://ccweb.ncnu.edu.tw/student/current_semester_opened_listlist.php?export='+format, verify=False)
 
     curlTime = time.strftime("%Y%m%d_%H%M%S")
     print("取得所有課程資料：", curlTime)
