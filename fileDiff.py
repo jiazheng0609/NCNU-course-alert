@@ -9,6 +9,8 @@ from requests.models import Response
 from bot import CourseAlertBot
 import json
 
+YEAR = "1102"
+
 session = requests.Session()
 mainURL = "https://ccweb.ncnu.edu.tw/student/"
 courses = []
@@ -75,10 +77,13 @@ def curlDepartmentCourseTable(year, format):
     '''
 
     # 取得所有課程的 csv 或 html
-    response = session.get('https://ccweb.ncnu.edu.tw/student/current_semester_opened_listlist.php?export='+format, verify=False)
+    # print("https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?cmd=search&t=aspmaker_course_opened_detail_view&x_year='.format(YEAR)")
+    response = session.get('https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?cmd=search&t=aspmaker_course_opened_detail_view&x_year={}'.format(YEAR))
+    response = session.get('https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?export='+format, verify=False)
 
     curlTime = time.strftime("%Y%m%d_%H%M%S")
     print("取得所有課程資料：", curlTime)
+
 
     if response.status_code != 200:
         raise ConnectionError("{} error".format(response.status_code))
@@ -92,12 +97,12 @@ def curlDepartmentCourseTable(year, format):
 if __name__ == "__main__":
 
     bot = CourseAlertBot()
-    bot.prevAns = curlDepartmentCourseTable("1101", 'html')
+    bot.prevAns = curlDepartmentCourseTable(YEAR, 'html')
     bot.start_polling()
 
     while True:
         try:
-            newAns = curlDepartmentCourseTable("1101", 'html')
+            newAns = curlDepartmentCourseTable(YEAR, 'html')
         except:
             continue
         
