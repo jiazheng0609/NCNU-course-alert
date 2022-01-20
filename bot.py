@@ -48,7 +48,8 @@ class CourseAlertBot():
                 "\n\n   /list" +
                 "\n         - 查看「已追蹤課號」列表"
                 "\n\n   /help" +
-                "\n         - 查看「幫助」"
+                "\n         - 查看「幫助」" +
+                "\n\n好用的話請幫忙到 GitHub 點個愛心： https://github.com/jiazheng0609/NCNU-course-alert"
         )
 
     def add(self, update, context):
