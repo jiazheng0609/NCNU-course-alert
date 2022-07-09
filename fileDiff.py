@@ -12,7 +12,7 @@ import json
 YEAR = "1102"
 
 session = requests.Session()
-mainURL = "https://ccweb.ncnu.edu.tw/student/"
+mainURL = "https://ccweb6.ncnu.edu.tw"
 courses = []
 
 def parseCsv(csvData):
@@ -43,6 +43,7 @@ def parseCsv(csvData):
 
 def parseHtml(htmlData):
     ans = {}
+    # print(htmlData)
     bsObj = bs(htmlData, "lxml")
     trs = bsObj.table.findAll("tr")
 
@@ -76,10 +77,12 @@ def curlDepartmentCourseTable(year, format):
         format: 格式選項，例如: 'csv', 'html'
     '''
 
+    global mainURL
     # 取得所有課程的 csv 或 html
     # print("https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?cmd=search&t=aspmaker_course_opened_detail_view&x_year='.format(YEAR)")
-    response = session.get('https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?cmd=search&t=aspmaker_course_opened_detail_view&x_year={}'.format(YEAR))
-    response = session.get('https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?export='+format, verify=False)
+    # response = session.get('https://ccweb.ncnu.edu.tw/student/aspmaker_course_opened_detail_viewlist.php?cmd=search&t=aspmaker_course_opened_detail_view&x_year={}'.format(YEAR))
+    response = session.get('{mainURL}/student/aspmaker_course_opened_detail_viewlist.php?export={format}'.format(mainURL=mainURL, format=format), verify=False)
+    print('{mainURL}/student/aspmaker_course_opened_detail_viewlist.php?export={format}'.format(mainURL=mainURL, format=format))
 
     curlTime = time.strftime("%Y%m%d_%H%M%S")
     print("取得所有課程資料：", curlTime)
